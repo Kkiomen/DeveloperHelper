@@ -1,4 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod parser;
+use parser::parse_project_files;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -12,6 +15,8 @@ fn process_project_directory(path: String) {
     // Przykładowa logika przetwarzania katalogu
     // Możesz tu dodać funkcję do przeszukiwania katalogu lub przetwarzania plików
     if std::path::Path::new(&path).exists() {
+
+        parse_project_files(&path);
         println!("Katalog istnieje i jest gotowy do przetwarzania");
     } else {
         println!("Podany katalog nie istnieje");

@@ -1,5 +1,5 @@
 import React, {useState}from 'react';
-import {Link, Outlet} from 'react-router-dom';
+import {Link, Outlet, useLocation} from 'react-router-dom';
 
 import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react'
 import {
@@ -10,9 +10,9 @@ import {
 } from '@heroicons/react/24/outline'
 
 const navigation = [
-    { name: 'AiAssistant', to: '/', icon: UserIcon, current: true },
-    { name: 'Documentation', to: '/documentation', icon: BookmarkSquareIcon, current: false },
-    { name: 'Settings', to: '/settings', icon: Cog8ToothIcon, current: false },
+    { name: 'AiAssistant', to: '/', icon: UserIcon},
+    { name: 'Documentation', to: '/documentation', icon: BookmarkSquareIcon },
+    { name: 'Settings', to: '/settings', icon: Cog8ToothIcon},
 ]
 
 function classNames(...classes) {
@@ -20,6 +20,7 @@ function classNames(...classes) {
 }
 
 const Home: React.FC = () => {
+    const location = useLocation();
     return (
         <>
             <div className="h-full w-full bg-gray-800">
@@ -34,20 +35,23 @@ const Home: React.FC = () => {
                     </div>
                     <nav className="mt-8">
                         <ul role="list" className="flex flex-col items-center space-y-1">
-                            {navigation.map((item) => (
-                                <li key={item.name}>
-                                    <Link
-                                        to={item.to}
-                                        className={classNames(
-                                            item.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white',
-                                            'group flex gap-x-3 rounded-md p-3 text-sm/6 font-semibold',
-                                        )}
-                                    >
-                                        <item.icon aria-hidden="true" className="h-6 w-6 shrink-0" />
-                                        <span className="sr-only">{item.name}</span>
-                                    </Link>
-                                </li>
-                            ))}
+                            {navigation.map((item) => {
+                                const isActive = location.pathname === item.to;
+                                return (
+                                    <li key={item.name}>
+                                        <Link
+                                            to={item.to}
+                                            className={classNames(
+                                                isActive ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+                                                'group flex gap-x-3 rounded-md p-3 text-sm/6 font-semibold'
+                                            )}
+                                        >
+                                            <item.icon aria-hidden="true" className="h-6 w-6 shrink-0" />
+                                            <span className="sr-only">{item.name}</span>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </nav>
                 </div>
