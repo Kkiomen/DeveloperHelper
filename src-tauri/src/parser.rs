@@ -3,8 +3,6 @@ use std::path::Path;
 pub mod tags;
 use crate::parser::tags::analyze_repo;
 
-
-
 extern "C" {
     fn tree_sitter_php() -> Language;
 }
@@ -29,8 +27,7 @@ pub fn parse_project_files(path: &str) {
     }
 }
 
-
-use tree_sitter::{Language, Parser, Node};
+use tree_sitter::{Language, Node, Parser};
 extern crate tree_sitter_php;
 
 // Funkcja do wydobywania nazw z węzłów
@@ -78,7 +75,8 @@ fn node_to_string(node: Node, code: &str, indent: usize) -> String {
         }
         // Deklaracja metody
         "method_declaration" => {
-            let visibility = get_node_field(node, "visibility", code).unwrap_or("public".to_string());
+            let visibility =
+                get_node_field(node, "visibility", code).unwrap_or("public".to_string());
             let is_static = node.child_by_field_name("static").is_some();
             let static_str = if is_static { "static " } else { "" };
             if let Some(method_name) = name {
@@ -111,7 +109,11 @@ fn node_to_string(node: Node, code: &str, indent: usize) -> String {
         }
         // Komentarze
         "comment" => {
-            result.push_str(&format!("{}// {}\n", indentation, code[node.byte_range()].trim()));
+            result.push_str(&format!(
+                "{}// {}\n",
+                indentation,
+                code[node.byte_range()].trim()
+            ));
         }
         _ => {
             result.push_str(&format!("{}{}\n", indentation, node_type));
@@ -149,7 +151,9 @@ pub fn parse_php_file(file_path: &Path) {
     let code = fs::read_to_string(file_path).expect("Nie można odczytać pliku");
     let mut parser = Parser::new();
     let language = tree_sitter_php::language();
-    parser.set_language(language).expect("Błąd przy ustawianiu języka");
+    parser
+        .set_language(language)
+        .expect("Błąd przy ustawianiu języka");
 
     let tree = parser.parse(&code, None).expect("Błąd parsowania");
     let root_node = tree.root_node();

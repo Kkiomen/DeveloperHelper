@@ -2,6 +2,8 @@ import React, {useEffect, useRef, useState} from "react";
 import AssistantMessages from "./components/AssistantMessages.tsx";
 import {invoke} from "@tauri-apps/api/core";
 import { open } from '@tauri-apps/plugin-dialog';
+import { readFile } from '@tauri-apps/plugin-fs';
+
 
 import {
     PaperAirplaneIcon,
@@ -201,7 +203,31 @@ const CoreAssistant: React.FC<AssistantProps> = ({type}) => {
                 console.log("Wybrany katalog:", selected);
                 setdfsdfs("Katalog został przesłany do backendu" + selected);
                 // Przekaż ścieżkę katalogu do backendu Tauri (Rust)
-                await invoke('process_project_directory', { path: selected });
+                const base64Data = await invoke('process_project_directory', { path: selected });
+
+                console.log(base64Data);
+
+                // Konwersja Base64 na dane binarne
+                const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+
+                // Tworzenie obiektu Blob
+                const zipBlob = new Blob([byteArray], { type: 'application/zip' });
+
+                // Przygotowanie danych formularza
+                const formData = new FormData();
+                formData.append('file', zipBlob, 'archive.zip');
+
+                let token = "slQYJVdfzkpXNlY80CifYJHgRQHAZy7PwiF2nocq5a34c264";
+
+                const response = await fetch(`http://localhost:8080/api/assistant/upload-files`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    body: formData,
+                });
+
+                console.log(response);
 
                 alert('Katalog został przesłany do backendu!');
             } else {
@@ -222,6 +248,14 @@ const CoreAssistant: React.FC<AssistantProps> = ({type}) => {
     };
 
     const sendMessageAction = async () => {
+
+        await invoke('get_files_by_user_message', { message: message });
+
+        setMessage('fff');
+
+        return;
+
+
         // Jeśli przycisk jest już zablokowany, zakończ funkcję
         if (isSendingRef.current || !message.trim()) return;
 

@@ -1,15 +1,15 @@
+use crate::parser::tags::analyze_repo as other_analyze_repo;
+use petgraph::algo::page_rank;
+use petgraph::graph::DiGraph;
+use serde::{Deserialize, Serialize};
+use sled::{Db, IVec};
 use std::collections::{HashMap, HashSet};
+use std::error::Error;
 use std::fs;
 use std::path::Path;
-use petgraph::graph::DiGraph;
-use sled::{Db, IVec};
-use tree_sitter::{Language, Parser, Node, Query, QueryCursor};
+use tree_sitter::{Language, Node, Parser, Query, QueryCursor};
 use tree_sitter_php::language as php_language;
 use walkdir::WalkDir;
-use std::error::Error;
-use petgraph::algo::page_rank;
-use crate::parser::tags::analyze_repo as other_analyze_repo;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Tag {
@@ -36,7 +36,9 @@ fn get_tags_from_file(file_path: &str) -> Result<Vec<Tag>, Box<dyn Error>> {
     // Inicjalizacja parsera
     let mut parser = Parser::new();
     let language = php_language();
-    parser.set_language(language).expect("Błąd przy ustawianiu języka");
+    parser
+        .set_language(language)
+        .expect("Błąd przy ustawianiu języka");
 
     // Parsowanie kodu
     let tree = parser.parse(code_bytes, None).expect("Błąd parsowania");
@@ -146,13 +148,11 @@ fn find_tags(node: Node, code_bytes: &[u8], tags: &mut Vec<Tag>, file_path: &str
     }
 }
 
-
-
-
 fn cache_tags(db: &Db, file_path: &str, tags: &[Tag]) {
     let key = file_path.as_bytes();
     let serialized_tags = serde_json::to_vec(tags).unwrap();
-    db.insert(key, serialized_tags).expect("Failed to cache tags");
+    db.insert(key, serialized_tags)
+        .expect("Failed to cache tags");
 }
 
 fn load_cached_tags(db: &Db, file_path: &str) -> Option<Vec<Tag>> {
@@ -206,10 +206,14 @@ pub fn analyze_repo(repo_path: &str) {
 
     for (name, files) in &defines {
         for file in files {
-            let idx = *node_indices.entry(file.clone()).or_insert_with(|| graph.add_node(file.clone()));
+            let idx = *node_indices
+                .entry(file.clone())
+                .or_insert_with(|| graph.add_node(file.clone()));
             if let Some(ref_files) = references.get(name) {
                 for ref_file in ref_files {
-                    let ref_idx = *node_indices.entry(ref_file.clone()).or_insert_with(|| graph.add_node(ref_file.clone()));
+                    let ref_idx = *node_indices
+                        .entry(ref_file.clone())
+                        .or_insert_with(|| graph.add_node(ref_file.clone()));
                     graph.add_edge(idx, ref_idx, 1.0);
                 }
             }
@@ -217,13 +221,12 @@ pub fn analyze_repo(repo_path: &str) {
     }
 
     // Obliczanie PageRank
-//     let ranks = page_rank(&graph, 0.85, None, 100, 1e-6).unwrap();
-//     for (idx, rank) in ranks.iter().enumerate() {
-//         let file = graph.node_weight(idx).unwrap();
-//         println!("File: {}, Rank: {:.4}", file, rank);
-//     }
+    //     let ranks = page_rank(&graph, 0.85, None, 100, 1e-6).unwrap();
+    //     for (idx, rank) in ranks.iter().enumerate() {
+    //         let file = graph.node_weight(idx).unwrap();
+    //         println!("File: {}, Rank: {:.4}", file, rank);
+    //     }
 }
-
 
 fn get_scm_content() -> String {
     let code = "(class_declaration
